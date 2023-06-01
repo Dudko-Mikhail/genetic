@@ -4,12 +4,12 @@ import java.util.random.RandomGenerator;
 import java.util.stream.IntStream;
 
 public final class RandomUtils {
-    public static IntStream randomIndexes(RandomGenerator random, int startIndex, int endIndex) {
+    public static IntStream uniqueRandomIndexes(RandomGenerator random, int startIndex, int endIndex) {
         return IntStream.range(startIndex, endIndex)
                 .filter(index -> random.nextBoolean());
     }
 
-    public static IntStream randomIndexes(RandomGenerator random, int startIndex, int endIndex, int size) {
+    public static IntStream uniqueRandomIndexes(RandomGenerator random, int startIndex, int endIndex, int size) {
         if (endIndex - startIndex < size) {
             throw new IllegalArgumentException(
                     String.format("Size must be less than endIndex - startIndex (%d). Actual size: %d",
@@ -20,11 +20,16 @@ public final class RandomUtils {
                 .limit(size);
     }
 
-    public static IntStream randomIndexes(RandomGenerator random, int startIndex, int endIndex,
-                                          double selectionProbability) {
+    public static IntStream randomIndexes(RandomGenerator random, int startIndex, int endIndex, int size) {
+        return IntStream.generate(() -> random.nextInt(startIndex, endIndex))
+                .limit(size);
+    }
+
+    public static IntStream uniqueRandomIndexes(RandomGenerator random, int startIndex, int endIndex,
+                                                double selectionProbability) {
         RequireUtils.probability(selectionProbability);
         return IntStream.range(startIndex, endIndex)
-                .filter(index -> random.nextDouble() < selectionProbability);
+                .filter(index -> roll(random, selectionProbability));
     }
 
     public static boolean roll(RandomGenerator random, double probability) {

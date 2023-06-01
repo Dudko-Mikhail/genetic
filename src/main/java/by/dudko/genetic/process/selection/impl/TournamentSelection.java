@@ -1,25 +1,26 @@
 package by.dudko.genetic.process.selection.impl;
 
+import by.dudko.genetic.model.Individual;
 import by.dudko.genetic.model.Population;
-import by.dudko.genetic.model.chromosome.Chromosome;
-import by.dudko.genetic.process.evaluation.FitnessFunction;
 import by.dudko.genetic.process.selection.Selection;
 import by.dudko.genetic.util.RandomUtils;
 import by.dudko.genetic.util.RequireUtils;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.Objects;
 import java.util.random.RandomGenerator;
+import java.util.stream.Stream;
 
-public class TournamentSelection<T, F> implements Selection<T, F> { // todo validation
+public class TournamentSelection<T, F> implements Selection<T, F> {
     private final RandomGenerator random;
     private final Comparator<? super F> comparator;
     private final int roundSize;
 
-    public TournamentSelection(Comparator<? super F> comparator, RandomGenerator random) {
-        this(comparator, 2, random);
+    public TournamentSelection(RandomGenerator random, Comparator<? super F> comparator) {
+        this(random, comparator, 2);
     }
 
-    public TournamentSelection(Comparator<? super F> comparator, int roundSize, RandomGenerator random) {
+    public TournamentSelection(RandomGenerator random, Comparator<? super F> comparator, int roundSize) {
         this.random = Objects.requireNonNull(random);
         this.comparator = Objects.requireNonNull(comparator);
         this.roundSize = RequireUtils.positive(roundSize);
@@ -27,26 +28,20 @@ public class TournamentSelection<T, F> implements Selection<T, F> { // todo vali
 
     @Override
     public Population<T, F> select(Population<T, F> population, int selectedPopulationSize) {
-        List<Chromosome<T>> selectedChromosomes = new ArrayList<>();
-        while (selectedChromosomes.size() < selectedPopulationSize) {
-            selectedChromosomes.add(hostTournament(population));
-        }
-        return new Population<>(selectedChromosomes, population.getFitnessFunction()); // todo конкретная реализация
+        RequireUtils.positive(selectedPopulationSize);
+        return new Population<>(Stream.generate(() -> hostTournament(population))
+                .limit(selectedPopulationSize)
+                .toList(), population.getFitnessFunction());
     }
 
-    private Chromosome<T> hostTournament(Population<T, F> population) {
-        var chromosomes = population.getChromosomes();
-        var fitnessFunction = population.getFitnessFunction();
-        return RandomUtils.randomIndexes(random, 0, population.getSize(), roundSize)
-                .mapToObj(chromosomes::get)
-                .reduce((first, second) -> determineWinner(first, second, fitnessFunction))
+    private Individual<T, F> hostTournament(Population<T, F> population) {
+        return RandomUtils.uniqueRandomIndexes(random, 0, population.getSize(), roundSize)
+                .mapToObj(population::getIndividual)
+                .reduce(this::determineWinner)
                 .orElseThrow();
     }
 
-    private Chromosome<T> determineWinner(Chromosome<T> first, Chromosome<T> second,
-                                          FitnessFunction<T, ? extends F> fitnessFunction) { // todo приспособленность уже вычеслена
-        var firstFitness = fitnessFunction.apply(first);
-        var secondFitness = fitnessFunction.apply(second);
-        return comparator.compare(firstFitness, secondFitness) > 0 ? first : second;
+    private Individual<T, F> determineWinner(Individual<T, F> first, Individual<T, F> second) {
+        return comparator.compare(first.getFitness(), second.getFitness()) > 0 ? first : second;
     }
 }

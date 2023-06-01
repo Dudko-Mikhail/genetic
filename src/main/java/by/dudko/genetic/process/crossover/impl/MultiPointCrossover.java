@@ -1,28 +1,46 @@
 package by.dudko.genetic.process.crossover.impl;
 
 import by.dudko.genetic.model.chromosome.Chromosome;
+import by.dudko.genetic.model.gene.BaseGene;
 import by.dudko.genetic.process.crossover.ChromosomeCrossover;
 import by.dudko.genetic.util.RandomUtils;
 import by.dudko.genetic.util.RequireUtils;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.random.RandomGenerator;
-import java.util.stream.IntStream;
 
-public class MultiPointCrossover<T> implements ChromosomeCrossover<T> {
+public class MultiPointCrossover<T> implements ChromosomeCrossover<T> { // todo Проверить валидацию
     private final RandomGenerator random;
     private final int pointsNumber;
 
     public MultiPointCrossover(RandomGenerator random, int pointsNumber) {
-        this.random = random;
+        this.random = Objects.requireNonNull(random);
         this.pointsNumber = RequireUtils.positive(pointsNumber);
     }
 
     @Override
-    public Chromosome<T> cross(Chromosome<T> first, Chromosome<T> second) { // todo validation, finish algorithm
+    public Chromosome<T> apply(Chromosome<T> first, Chromosome<T> second) {
         int length = Math.min(first.length(), second.length());
-        IntStream indexesStream = RandomUtils.randomIndexes(random, 0, length);
-        int[] pointsIndexes = indexesStream.toArray();
+        RequireUtils.less(pointsNumber, length);
+        int[] indexes = RandomUtils.uniqueRandomIndexes(random, 1, length, pointsNumber)
+                .sorted()
+                .toArray();
+        List<BaseGene<T>> genes = new ArrayList<>();
+        fillChromosome(0, 0, indexes, first, second, genes);
+        return first.newInstance(genes);
+    }
 
-        return null;
+    private void fillChromosome(int start, int position, int[] indexes,
+                                Chromosome<T> first, Chromosome<T> second, List<BaseGene<T>> genes) {
+        if (position > indexes.length) {
+            return;
+        }
+        int end = position < indexes.length ? indexes[position] : first.length();
+        for (int i = start; i < end; i++) {
+            genes.add(first.getGene(i));
+        }
+        fillChromosome(end, position + 1, indexes, second, first, genes);
     }
 }

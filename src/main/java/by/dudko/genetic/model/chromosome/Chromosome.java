@@ -1,23 +1,30 @@
 package by.dudko.genetic.model.chromosome;
 
+import by.dudko.genetic.model.gene.BaseGene;
 import by.dudko.genetic.model.gene.Gene;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
-public interface Chromosome<T> {
+public interface Chromosome<T> { // todo Можно ещё добавить фабричные методы от varArgs
     int length();
 
-    Gene<T> getGene(int index);
+    BaseGene<T> getGene(int index);
 
-    List<Gene<T>> getGenes();
+    List<BaseGene<T>> getGenes();
 
-    Gene<T> replaceGene(int index, Gene<T> newGene);
+    BaseGene<T> replaceGene(int index, BaseGene<T> newGene);
 
-//    Chromosome<T, F> withFitness(F fitness);  // todo think about immutable class
+    Chromosome<T> newInstance(Collection<? extends BaseGene<T>> genes);
 
-//    F getFitness();
+    default Chromosome<T> newInstance(BaseGene<T>[] genes) {
+        return newInstance(Arrays.stream(genes)
+                .toList());
+    }
 
-//    boolean isEvaluated();
-
-//    int getAge();
+    default Gene<T> newGene(T value) {
+        Gene<T> gene = getGene(0);
+        return gene != null ? gene.newInstance(value) : null;
+    }
 }

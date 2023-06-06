@@ -1,34 +1,33 @@
 package by.dudko.genetic.model;
 
 import by.dudko.genetic.model.chromosome.Chromosome;
-import by.dudko.genetic.model.gene.BaseGene;
+import by.dudko.genetic.model.gene.Gene;
 import by.dudko.genetic.process.evaluation.FitnessFunction;
 
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 
-public class Individual<T, F> implements Chromosome<T> { // todo equals, hashcode, boolean isEvaluated?
-    private final Chromosome<T> chromosome;
+public class Individual<G extends Gene<?, G>, F> implements Chromosome<G> { // todo equals, hashcode, boolean isEvaluated?
+    private final Chromosome<G> chromosome;
     private long birthGeneration;
     private F fitness;
 
-    public Individual(Chromosome<T> chromosome, long birthGeneration, F fitness) { // todo Разобраться с конструкторами конструкторы
+    public Individual(Chromosome<G> chromosome, long birthGeneration, F fitness) { // todo Разобраться с конструкторами конструкторы
         this(chromosome, birthGeneration);
         this.fitness = fitness;
     }
 
-    public Individual(Chromosome<T> chromosome, long birthGeneration) {
+    public Individual(Chromosome<G> chromosome, long birthGeneration) {
         this(chromosome);
         this.birthGeneration = birthGeneration;
     }
 
-    public Individual(Chromosome<T> chromosome, F fitness) {
+    public Individual(Chromosome<G> chromosome, F fitness) {
         this(chromosome);
         this.fitness = fitness;
     }
 
-    public Individual(Chromosome<T> chromosome) {
+    public Individual(Chromosome<G> chromosome) {
         this.chromosome = chromosome;
     }
 
@@ -38,27 +37,27 @@ public class Individual<T, F> implements Chromosome<T> { // todo equals, hashcod
     }
 
     @Override
-    public BaseGene<T> getGene(int index) {
+    public G getGene(int index) {
         return chromosome.getGene(index);
     }
 
     @Override
-    public List<BaseGene<T>> getGenes() {
+    public List<G> getGenes() {
         return chromosome.getGenes();
     }
 
     @Override
-    public BaseGene<T> replaceGene(int index, BaseGene<T> newGene) {
+    public G replaceGene(int index, G newGene) {
         fitness = null;
         return chromosome.replaceGene(index, newGene);
     }
 
     @Override
-    public Chromosome<T> newInstance(Collection<? extends BaseGene<T>> genes) {
+    public Individual<G, F> newInstance(Collection<? extends G> genes) {
         return new Individual<>(chromosome.newInstance(genes), fitness);
     }
 
-    public Chromosome<T> box() {
+    public Chromosome<G> box() {
         return this;
     }
 
@@ -74,7 +73,7 @@ public class Individual<T, F> implements Chromosome<T> { // todo equals, hashcod
         this.fitness = fitness;
     }
 
-    public F evaluateAndSetFitness(FitnessFunction<T, ? extends F> fitnessFunction) {
+    public F evaluateAndSetFitness(FitnessFunction<G, ? extends F> fitnessFunction) {
         fitness = fitnessFunction.apply(chromosome);
         return fitness;
     }
@@ -85,5 +84,13 @@ public class Individual<T, F> implements Chromosome<T> { // todo equals, hashcod
 
     public boolean nonEvaluated() {
         return fitness == null;
+    }
+
+    @Override
+    public String toString() { // todo update
+        return "Individual{" +
+                "chromosome=" + chromosome +
+                ", fitness=" + fitness +
+                '}';
     }
 }

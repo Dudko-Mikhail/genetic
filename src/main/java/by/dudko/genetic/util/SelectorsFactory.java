@@ -5,7 +5,7 @@ import java.util.function.IntSupplier;
 import java.util.random.RandomGenerator;
 import java.util.stream.IntStream;
 
-public final class SelectorsFactory {
+public final class SelectorsFactory { // todo реализовать через RandomUtils
     private SelectorsFactory() {
     }
 

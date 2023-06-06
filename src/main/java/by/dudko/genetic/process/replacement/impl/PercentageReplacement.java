@@ -1,19 +1,20 @@
 package by.dudko.genetic.process.replacement.impl;
 
+import by.dudko.genetic.model.gene.Gene;
 import by.dudko.genetic.process.selection.Selection;
 import by.dudko.genetic.util.RequireUtils;
 
-public class PercentageReplacement<T, F> extends AbstractBinaryReplacement<T, F> {
+public class PercentageReplacement<G extends Gene<?, G>, F> extends AbstractBinaryReplacement<G, F> {
     private final double offspringPercentage;
 
     public PercentageReplacement(double offspringPercentage,
-                                 Selection<T, F> oldGenerationSelection, Selection<T, F> offspringSelection) {
+                                 Selection<G, F> oldGenerationSelection, Selection<G, F> offspringSelection) {
         super(oldGenerationSelection, offspringSelection);
         this.offspringPercentage = RequireUtils.probability(offspringPercentage);
     }
 
     public PercentageReplacement(double offspringPercentage,
-                                 Selection<T, F> selection) {
+                                 Selection<G, F> selection) {
         super(selection);
         this.offspringPercentage = RequireUtils.probability(offspringPercentage);
     }

@@ -1,15 +1,15 @@
 package by.dudko.genetic.process.selection.impl;
 
 import by.dudko.genetic.model.Population;
+import by.dudko.genetic.model.gene.Gene;
 import by.dudko.genetic.process.selection.Selection;
 import by.dudko.genetic.util.RequireUtils;
 
 import java.util.Objects;
-import java.util.Random;
 import java.util.random.RandomGenerator;
 import java.util.stream.Stream;
 
-public abstract class ProbabilitySelection<T, F> implements Selection<T, F> { // todo проблема отрицательной приспособленности
+public abstract class ProbabilitySelection<G extends Gene<?, G>, F> implements Selection<G, F> { // todo проблема отрицательной приспособленности
     private static final int BINARY_SEARCH_THRESHOLD = 32;
     protected final RandomGenerator random;
 
@@ -18,9 +18,13 @@ public abstract class ProbabilitySelection<T, F> implements Selection<T, F> { //
     }
 
     @Override
-    public Population<T, F> select(Population<T, F> population, int selectedPopulationSize) {
+    public final Population<G, F> select(Population<G, F> population, int selectedPopulationSize) {
         RequireUtils.positive(selectedPopulationSize);
         double[] partialSums = mapToPartialSums(calculateProbabilities(population));
+        return select(population, selectedPopulationSize, partialSums);
+    }
+
+    public Population<G, F> select(Population<G, F> population, int selectedPopulationSize, double[] partialSums) {
         int size = population.getSize();
         var selectedIndividuals = Stream.generate(() -> population.getIndividual(spin(partialSums) % size))
                 .limit(selectedPopulationSize)
@@ -28,47 +32,7 @@ public abstract class ProbabilitySelection<T, F> implements Selection<T, F> { //
         return new Population<>(selectedIndividuals, population.getFitnessFunction());
     }
 
-    public abstract double[] calculateProbabilities(Population<T, F> population);
-
-    public int spin(double[] partialSums) {
-        double value = random.nextDouble();
-        return partialSums.length < BINARY_SEARCH_THRESHOLD ? linearSearch(partialSums, value)
-                : binarySearch(partialSums, value);
-    }
-
-    int linearSearch(double[] partialSums, double value) {
-        for (int i = 0; i < partialSums.length; i++) {
-            if (value < partialSums[i]) {
-                return i;
-            }
-        }
-        return 0;
-    }
-
-    int binarySearch(double[] partialSums, double value) {
-        int start = 0;
-        int end = partialSums.length - 1;
-
-        while (start <= end) {
-            int mid = (start + end) >>> 1;
-            double midValue = partialSums[mid];
-
-            if (midValue < value)
-                start = mid + 1;
-            else if (midValue > value)
-                end = mid - 1;
-            else
-                return mid;
-        }
-
-        if (start - 1 >= 0 && value < partialSums[start - 1]) {
-            System.out.println("Here " + value);
-            return start - 1;
-        }
-        return Math.min(start, partialSums.length - 1);
-    }
-
-    private double[] mapToPartialSums(double[] probabilities) {
+    protected double[] mapToPartialSums(double[] probabilities) { // todo change to private
         double sum = 0;
         for (int i = 0; i < probabilities.length; i++) {
             sum += probabilities[i];
@@ -77,23 +41,46 @@ public abstract class ProbabilitySelection<T, F> implements Selection<T, F> { //
         return probabilities;
     }
 
-    public static void main(String[] args) { // todo Делать ли что-то при неудачном поиске
-        double[] arr = new double[]{0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0};
-        var selection = new ProbabilitySelection(new Random()) {
-            @Override
-            public double[] calculateProbabilities(Population population) {
-                return new double[0];
-            }
+    protected abstract double[] calculateProbabilities(Population<G, F> population);
 
-        };
-        double toSearch = -0.11;
-        for (int i = 0; i < 14; i++) {
-            var index = selection.binarySearch(arr, toSearch);
-            System.out.println("Index: [%d]. Searched value: [%f].  Answer: [%f]%n"
-                    .formatted(index, toSearch, arr[index]));
-            System.out.println("Linear search. Index: [%d]. Searched value: [%f].  Answer: [%f]%n"
-                    .formatted(selection.linearSearch(arr, toSearch), toSearch, arr[selection.linearSearch(arr, toSearch)]));
-            toSearch += 0.1;
+    protected int spin(double[] partialSums) {
+        double value = random.nextDouble();
+        return find(partialSums, value, 0);
+    }
+
+    protected int find(double[] partialSums, double value, int start) {
+        return partialSums.length < BINARY_SEARCH_THRESHOLD ? linearSearch(partialSums, value, start)
+                : binarySearch(partialSums, value, start);
+    }
+
+    int linearSearch(double[] partialSums, double value, int start) { // todo package-private Для тестирования
+        for (int i = start; i < partialSums.length; i++) {
+            if (value <= partialSums[i]) {
+                return i;
+            }
         }
+        return partialSums.length - 1;
+    }
+
+    int binarySearch(double[] partialSums, double value, int start) { // todo package-private Для тестирования
+        int end = partialSums.length - 1;
+        int begin = start;
+        while (begin <= end) {
+            int mid = (begin + end) >>> 1;
+            double midValue = partialSums[mid];
+
+            if (midValue < value)
+                begin = mid + 1;
+            else if (midValue > value)
+                end = mid - 1;
+            else
+                return mid;
+        }
+
+        if (begin - 1 >= 0 && value < partialSums[begin - 1] && begin - 1 >= start) {
+            System.out.println("Here " + value);
+            return start - 1;
+        }
+        return Math.min(begin, partialSums.length - 1);
     }
 }

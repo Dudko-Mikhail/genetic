@@ -1,7 +1,8 @@
 package by.dudko.genetic.process.replacement;
 
 import by.dudko.genetic.model.Population;
+import by.dudko.genetic.model.gene.Gene;
 
-public interface Replacement<T, F> {
-    Population<T, F> replace(Population<T, F> oldGeneration, Population<T, F> offspring, int newPopulationSize);
+public interface Replacement<G extends Gene<?, G>, F> {
+    Population<G, F> replace(Population<G, F> oldGeneration, Population<G, F> offspring, int newPopulationSize);
 }

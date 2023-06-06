@@ -1,6 +1,7 @@
 package by.dudko.genetic.process.mutation.impl;
 
 import by.dudko.genetic.model.chromosome.Chromosome;
+import by.dudko.genetic.model.gene.Gene;
 import by.dudko.genetic.process.mutation.ChromosomeMutation;
 import by.dudko.genetic.util.RandomUtils;
 
@@ -8,7 +9,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.random.RandomGenerator;
 
-public class ExchangeMutation<T> implements ChromosomeMutation<T> {
+public class ExchangeMutation<G extends Gene<?, G>> implements ChromosomeMutation<G> {
     private final RandomGenerator random;
 
     public ExchangeMutation(RandomGenerator random) {
@@ -16,7 +17,7 @@ public class ExchangeMutation<T> implements ChromosomeMutation<T> {
     }
 
     @Override
-    public Chromosome<T> mutateChromosome(Chromosome<T> chromosome) {
+    public Chromosome<G> mutateChromosome(Chromosome<G> chromosome) {
         int length = chromosome.length();
         var genes = new ArrayList<>(chromosome.getGenes());
         int[] swapIndexes = RandomUtils.uniqueRandomIndexes(random, 0, length, 2)

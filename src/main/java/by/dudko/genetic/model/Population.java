@@ -1,25 +1,26 @@
 package by.dudko.genetic.model;
 
 import by.dudko.genetic.model.chromosome.Chromosome;
+import by.dudko.genetic.model.gene.Gene;
 import by.dudko.genetic.process.evaluation.FitnessFunction;
 
 import java.util.*;
 
-public class Population<T, F> { // todo для вычисления самого приспособленного компаратор можно получать через конструктор
-    private final List<Individual<T, F>> individuals;
-    private FitnessFunction<T, ? extends F> fitnessFunction;
+public class Population<G extends Gene<?, G>, F> { // todo для вычисления самого приспособленного компаратор можно получать через конструктор
+    private final List<Individual<G, F>> individuals;
+    private FitnessFunction<G, ? extends F> fitnessFunction;
     private boolean isEvaluated;
 
-    public static <T, F> Comparator<Individual<T, F>> toIndividualsComparator(Comparator<? super F> fitnessComparator) {
+    public static <G extends Gene<?, G>, F> Comparator<Individual<G, F>> toIndividualsComparator(Comparator<? super F> fitnessComparator) {
         return (a, b) -> fitnessComparator.compare(a.getFitness(), b.getFitness());
     }
 
-    public Population(Collection<? extends Chromosome<T>> chromosomes, FitnessFunction<T, ? extends F> fitnessFunction) {
+    public Population(Collection<? extends Chromosome<G>> chromosomes, FitnessFunction<G, ? extends F> fitnessFunction) {
         this(chromosomes);
         this.fitnessFunction = Objects.requireNonNull(fitnessFunction);
     }
 
-    public Population(Collection<? extends Chromosome<T>> chromosomes) {
+    public Population(Collection<? extends Chromosome<G>> chromosomes) {
         this.individuals = new ArrayList<>(
                 chromosomes.stream()
                         .map(this::wrap)
@@ -27,13 +28,13 @@ public class Population<T, F> { // todo для вычисления самого
         );
     }
 
-    public Population(Chromosome<T>... chromosomes) {
+    public Population(Chromosome<G>... chromosomes) {
         this(Arrays.stream(chromosomes)
                 .toList());
     }
 
 
-    public Population(FitnessFunction<T, F> fitnessFunction, Chromosome<T>... chromosomes) {
+    public Population(FitnessFunction<G, F> fitnessFunction, Chromosome<G>... chromosomes) {
         this(Arrays.stream(chromosomes)
                 .toList(), fitnessFunction);
     }
@@ -56,13 +57,13 @@ public class Population<T, F> { // todo для вычисления самого
         isEvaluated = true;
     }
 
-    public void evaluatePopulation(FitnessFunction<T, F> fitnessFunction) { // todo не потокобезопасно
+    public void evaluatePopulation(FitnessFunction<G, F> fitnessFunction) { // todo не потокобезопасно
         this.fitnessFunction = Objects.requireNonNull(fitnessFunction);
         individuals.forEach(individual -> individual.evaluateAndSetFitness(fitnessFunction));
         isEvaluated = true;
     }
 
-    public Optional<Individual<T, F>> getFittest(Comparator<? super F> comparator) { // todo можно вычислять одновременно в методе evaluate!!!
+    public Optional<Individual<G, F>> getFittest(Comparator<? super F> comparator) { // todo можно вычислять одновременно в методе evaluate!!!
         if (nonEvaluated()) {
             evaluatePopulation();
         }
@@ -82,11 +83,11 @@ public class Population<T, F> { // todo для вычисления самого
         return !isEvaluated;
     }
 
-    public List<Individual<T, F>> getIndividuals() {
+    public List<Individual<G, F>> getIndividuals() {
         return Collections.unmodifiableList(individuals);
     }
 
-    public void addAllWithoutEvaluation(Collection<? extends Chromosome<T>> chromosomes) {
+    public void addAllWithoutEvaluation(Collection<? extends Chromosome<G>> chromosomes) {
         individuals.addAll(
                 chromosomes.stream()
                         .map(this::wrap)
@@ -95,7 +96,7 @@ public class Population<T, F> { // todo для вычисления самого
         // todo implement. Возраст нужно вынести в хромосому или хранить номер текущего поколения в популяции
     }
 
-    public void addAllWithEvaluation(Collection<? extends Chromosome<T>> chromosomes) {
+    public void addAllWithEvaluation(Collection<? extends Chromosome<G>> chromosomes) {
         individuals.addAll(
                 chromosomes.stream()
                         .map(this::wrapAndEvaluate)
@@ -104,19 +105,19 @@ public class Population<T, F> { // todo для вычисления самого
         // todo implement. Возраст нужно вынести в хромосому или хранить номер текущего поколения в популяции
     }
 
-    public Individual<T, F> getIndividual(int index) {
+    public Individual<G, F> getIndividual(int index) {
         return individuals.get(index);
     }
 
-    public Individual<T, F> replaceIndividual(int index, Chromosome<T> newChromosome) {
+    public Individual<G, F> replaceIndividual(int index, Chromosome<G> newChromosome) {
         return individuals.set(index, wrapAndEvaluate(newChromosome));
     }
 
-    private Individual<T, F> wrap(Chromosome<T> chromosome) {
+    private Individual<G, F> wrap(Chromosome<G> chromosome) {
         return new Individual<>(chromosome);
     }
 
-    private Individual<T, F> wrapAndEvaluate(Chromosome<T> chromosome) {
+    private Individual<G, F> wrapAndEvaluate(Chromosome<G> chromosome) {
         return new Individual<>(chromosome, fitnessFunction.apply(chromosome));
     }
 
@@ -128,7 +129,12 @@ public class Population<T, F> { // todo для вычисления самого
         return individuals.size();
     }
 
-    public FitnessFunction<T, ? extends F> getFitnessFunction() {
+    public FitnessFunction<G, ? extends F> getFitnessFunction() {
         return fitnessFunction;
+    }
+
+    @Override
+    public String toString() {
+        return individuals.toString();
     }
 }

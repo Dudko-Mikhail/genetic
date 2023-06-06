@@ -1,7 +1,7 @@
 package by.dudko.genetic.process.crossover.impl;
 
 import by.dudko.genetic.model.chromosome.Chromosome;
-import by.dudko.genetic.model.gene.BaseGene;
+import by.dudko.genetic.model.gene.Gene;
 import by.dudko.genetic.process.crossover.ChromosomeCrossover;
 import by.dudko.genetic.util.RandomUtils;
 import by.dudko.genetic.util.RequireUtils;
@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.random.RandomGenerator;
 
-public class MultiPointCrossover<T> implements ChromosomeCrossover<T> { // todo Проверить валидацию
+public class MultiPointCrossover<G extends Gene<?, G>> implements ChromosomeCrossover<G> { // todo Проверить валидацию
     private final RandomGenerator random;
     private final int pointsNumber;
 
@@ -21,19 +21,19 @@ public class MultiPointCrossover<T> implements ChromosomeCrossover<T> { // todo 
     }
 
     @Override
-    public Chromosome<T> apply(Chromosome<T> first, Chromosome<T> second) {
+    public Chromosome<G> apply(Chromosome<G> first, Chromosome<G> second) {
         int length = Math.min(first.length(), second.length());
         RequireUtils.less(pointsNumber, length);
         int[] indexes = RandomUtils.uniqueRandomIndexes(random, 1, length, pointsNumber)
                 .sorted()
                 .toArray();
-        List<BaseGene<T>> genes = new ArrayList<>();
+        List<G> genes = new ArrayList<>();
         fillChromosome(0, 0, indexes, first, second, genes);
         return first.newInstance(genes);
     }
 
     private void fillChromosome(int start, int position, int[] indexes,
-                                Chromosome<T> first, Chromosome<T> second, List<BaseGene<T>> genes) {
+                                Chromosome<G> first, Chromosome<G> second, List<G> genes) {
         if (position > indexes.length) {
             return;
         }

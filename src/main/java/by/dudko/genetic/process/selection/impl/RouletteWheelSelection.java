@@ -1,12 +1,13 @@
 package by.dudko.genetic.process.selection.impl;
 
 import by.dudko.genetic.model.Population;
+import by.dudko.genetic.model.gene.Gene;
 
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.random.RandomGenerator;
 
-public class RouletteWheelSelection<T, F> extends ProbabilitySelection<T, F> {
+public class RouletteWheelSelection<G extends Gene<?, G>, F> extends ProbabilitySelection<G, F> {
     private final Function<F, Double> mapper;
 
     public RouletteWheelSelection(RandomGenerator random, Function<F, Double> mapper) {
@@ -15,7 +16,7 @@ public class RouletteWheelSelection<T, F> extends ProbabilitySelection<T, F> {
     }
 
     @Override
-    public double[] calculateProbabilities(Population<T, F> population) {
+    protected double[] calculateProbabilities(Population<G, F> population) { // todo важно маппер должен возвращать неотрицательные значения
         double sum = 0;
         int populationSize = population.getSize();
         double[] dataArray = new double[populationSize];

@@ -29,10 +29,10 @@ public final class RandomUtils {
                                                 double selectionProbability) {
         RequireUtils.probability(selectionProbability);
         return IntStream.range(startIndex, endIndex)
-                .filter(index -> roll(random, selectionProbability));
+                .filter(index -> spin(random, selectionProbability));
     }
 
-    public static boolean roll(RandomGenerator random, double probability) {
+    public static boolean spin(RandomGenerator random, double probability) {
         return random.nextDouble() < probability;
     }
 

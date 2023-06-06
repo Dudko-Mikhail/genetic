@@ -1,12 +1,9 @@
 package by.dudko.genetic;
 
-import by.dudko.genetic.util.RandomUtils;
 import by.dudko.genetic.util.SelectorsFactory;
 
-import java.util.DoubleSummaryStatistics;
 import java.util.LongSummaryStatistics;
 import java.util.Random;
-import java.util.Set;
 
 public class Main {
     private static final Random random = new Random();
@@ -18,24 +15,6 @@ public class Main {
         System.out.println(selector.selectIndexes(9).boxed().toList());
         System.out.println(selector.selectIndexes(9).boxed().toList());
 
-    }
-
-    static void testPerformance() {
-        Random random = new Random();
-        long start;
-        long end;
-
-        DoubleSummaryStatistics oldSolution = new DoubleSummaryStatistics();
-        for (int i = 0; i < 5; i++) {
-            start = System.currentTimeMillis();
-            var arr = RandomUtils.uniqueRandomIndexes(random, 0, 100000000, 20000000)
-                    .toArray();
-            end = System.currentTimeMillis();
-            System.out.println(arr.length);
-            oldSolution.accept(end - start);
-        }
-
-        System.out.println("Stream solution: " + oldSolution.getAverage());
     }
 
     public static LongSummaryStatistics measurePerformance(int repeatCount, Command command) {
@@ -66,39 +45,3 @@ class Problems {
         // todo стоп функция по времени
     }
 }
-
-
-// todo Важно!!! Подумать над выносом интерфейса indexSelector и использование его в мутации и скрещивании
-// todo Вместо T написать свой интерфейс<T> с методами: T get(index), size(), getCollection(), replace(index, T object);
-// todo введение интерфейса поменяет реализацию Mutation/Crossover builder: поле indexSelector вместо вероянтостей.
-interface IndexSelector<T> {
-    Set<Integer> select(T type);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

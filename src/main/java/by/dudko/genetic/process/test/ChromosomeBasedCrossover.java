@@ -2,37 +2,34 @@ package by.dudko.genetic.process.test;
 
 import by.dudko.genetic.model.Population;
 import by.dudko.genetic.model.chromosome.Chromosome;
-import by.dudko.genetic.model.gene.BaseGene;
+import by.dudko.genetic.model.gene.Gene;
 import by.dudko.genetic.process.crossover.PopulationCrossover;
-import by.dudko.genetic.process.evaluation.FitnessFunction;
-import by.dudko.genetic.process.initialization.GeneBasedInitializer;
 import by.dudko.genetic.util.IndexSelector;
 import by.dudko.genetic.util.SelectorsFactory;
 
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.Random;
 import java.util.function.BinaryOperator;
 import java.util.random.RandomGenerator;
 import java.util.stream.Stream;
 
-public abstract class ChromosomeBasedCrossover<T> implements PopulationCrossover<T> {
-    private final Selector<T> selector;
+public abstract class ChromosomeBasedCrossover<G extends Gene<?, G>> implements PopulationCrossover<G> {
+    private final Selector<G> selector;
     private final int selectionSize;
 
     protected ChromosomeBasedCrossover(RandomGenerator random, int selectionSize) {
         this(Selectors.randomSelector(random), selectionSize);
     }
 
-    public ChromosomeBasedCrossover(Selector<T> selector, int selectionSize) {
+    public ChromosomeBasedCrossover(Selector<G> selector, int selectionSize) {
         this.selector = Objects.requireNonNull(selector);
         this.selectionSize = selectionSize;
     }
 
     @Override
-    public final Population<T, ?> performCrossover(Population<T, ?> population, int offspringSize) {
+    public final Population<G, ?> performCrossover(Population<G, ?> population, int offspringSize) {
         var offspring = Stream.generate(() -> {
-                    Chromosome<T>[] chromosomes = selector.select(population, selectionSize);
+                    Chromosome<G>[] chromosomes = selector.select(population, selectionSize);
                     return performCrossover(chromosomes);
                 })
                 .limit(offspringSize)
@@ -40,10 +37,10 @@ public abstract class ChromosomeBasedCrossover<T> implements PopulationCrossover
         return new Population<>(offspring, population.getFitnessFunction());
     }
 
-    protected abstract Chromosome<T> performCrossover(Chromosome<T>[] participants);
+    protected abstract Chromosome<G> performCrossover(Chromosome<G>[] participants);
 }
 
-abstract class ChromosomeBasedCrossoverWithIndexSelector<T> implements PopulationCrossover<T> {
+abstract class ChromosomeBasedCrossoverWithIndexSelector<G extends Gene<?, G>> implements PopulationCrossover<G> {
     private final IndexSelector indexSelector;
 
     public ChromosomeBasedCrossoverWithIndexSelector(IndexSelector indexSelector) {
@@ -51,10 +48,10 @@ abstract class ChromosomeBasedCrossoverWithIndexSelector<T> implements Populatio
     }
 
     @Override
-    public Population<T, ?> performCrossover(Population<T, ?> population, int offspringSize) {
+    public Population<G, ?> performCrossover(Population<G, ?> population, int offspringSize) {
 
         var offspring = Stream.generate(() -> {
-                    Chromosome<T>[] individuals = indexSelector.selectIndexes(population.getSize())
+                    Chromosome<G>[] individuals = indexSelector.selectIndexes(population.getSize())
                             .mapToObj(population::getIndividual)
                             .toArray(Chromosome[]::new);
                     return performCrossover(individuals);
@@ -64,19 +61,19 @@ abstract class ChromosomeBasedCrossoverWithIndexSelector<T> implements Populatio
         return new Population<>(offspring, population.getFitnessFunction());
     }
 
-    protected abstract Chromosome<T> performCrossover(Chromosome<T>[] participants);
+    protected abstract Chromosome<G> performCrossover(Chromosome<G>[] participants);
 }
 
 
-interface Selector<T> {
-    Chromosome<T>[] select(Population<T, ?> population, int count);
+interface Selector<G extends Gene<?, G>> {
+    Chromosome<G>[] select(Population<G, ?> population, int count);
 }
 
 class Selectors {
-    public static <T> Selector<T> randomSelector(RandomGenerator random) {
+    public static <G extends Gene<?, G>> Selector<G> randomSelector(RandomGenerator random) {
         return (population, count) -> {
             int size = population.getSize();
-            Chromosome<T>[] chromosomes = new Chromosome[count];
+            Chromosome<G>[] chromosomes = new Chromosome[count];
             for (int i = 0; i < count; i++) {
                 chromosomes[i] = population.getIndividual(random.nextInt(size));
             }
@@ -103,17 +100,17 @@ class Selectors {
 }
 
 
-abstract class BinaryCrossover<T> extends ChromosomeBasedCrossover<T> implements BinaryOperator<Chromosome<T>> {
+abstract class BinaryCrossover<G extends Gene<?, G>> extends ChromosomeBasedCrossover<G> implements BinaryOperator<Chromosome<G>> {
     protected BinaryCrossover(RandomGenerator random) {
         super(random, 2);
     }
 
-    protected BinaryCrossover(Selector<T> selector) {
+    protected BinaryCrossover(Selector<G> selector) {
         super(selector, 2);
     }
 
     @Override
-    protected final Chromosome<T> performCrossover(Chromosome<T>[] participants) {
+    protected final Chromosome<G> performCrossover(Chromosome<G>[] participants) {
         return apply(participants[0], participants[1]);
     }
 }

@@ -19,6 +19,13 @@ public final class RequireUtils { // todo refactor messages. Change class name t
         return value;
     }
 
+    public static double positive(double value) {
+        if (Double.compare(value, 0.0) <= 0) {
+            throw new IllegalArgumentException("Value must be positive. Actual value: %f".formatted(value));
+        }
+        return value;
+    }
+
     public static int nonNegative(int value) {
         if (value < 0) {
             throw new IllegalArgumentException("Value must be >= 0. Actual value: %d".formatted(value));

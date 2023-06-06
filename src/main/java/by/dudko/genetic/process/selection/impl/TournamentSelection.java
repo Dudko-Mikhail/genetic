@@ -2,6 +2,7 @@ package by.dudko.genetic.process.selection.impl;
 
 import by.dudko.genetic.model.Individual;
 import by.dudko.genetic.model.Population;
+import by.dudko.genetic.model.gene.Gene;
 import by.dudko.genetic.process.selection.Selection;
 import by.dudko.genetic.util.RandomUtils;
 import by.dudko.genetic.util.RequireUtils;
@@ -11,7 +12,7 @@ import java.util.Objects;
 import java.util.random.RandomGenerator;
 import java.util.stream.Stream;
 
-public class TournamentSelection<T, F> implements Selection<T, F> {
+public class TournamentSelection<G extends Gene<?, G>, F> implements Selection<G, F> {
     private final RandomGenerator random;
     private final Comparator<? super F> comparator;
     private final int roundSize;
@@ -27,21 +28,21 @@ public class TournamentSelection<T, F> implements Selection<T, F> {
     }
 
     @Override
-    public Population<T, F> select(Population<T, F> population, int selectedPopulationSize) {
+    public Population<G, F> select(Population<G, F> population, int selectedPopulationSize) {
         RequireUtils.positive(selectedPopulationSize);
         return new Population<>(Stream.generate(() -> hostTournament(population))
                 .limit(selectedPopulationSize)
                 .toList(), population.getFitnessFunction());
     }
 
-    private Individual<T, F> hostTournament(Population<T, F> population) {
+    private Individual<G, F> hostTournament(Population<G, F> population) {
         return RandomUtils.uniqueRandomIndexes(random, 0, population.getSize(), roundSize)
                 .mapToObj(population::getIndividual)
                 .reduce(this::determineWinner)
                 .orElseThrow();
     }
 
-    private Individual<T, F> determineWinner(Individual<T, F> first, Individual<T, F> second) {
+    private Individual<G, F> determineWinner(Individual<G, F> first, Individual<G, F> second) {
         return comparator.compare(first.getFitness(), second.getFitness()) > 0 ? first : second;
     }
 }

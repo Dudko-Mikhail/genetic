@@ -2,30 +2,30 @@ package by.dudko.genetic.algorithm;
 
 import by.dudko.genetic.model.Individual;
 import by.dudko.genetic.model.Population;
+import by.dudko.genetic.model.gene.Gene;
 import by.dudko.genetic.util.RequireUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.CyclicBarrier;
 import java.util.function.Supplier;
 
-public class ParallelGeneticAlgorithm<T, F> {
-    private List<GeneticAlgorithm<T, F>> algorithms = new ArrayList<>();
-    private GeneticAlgorithm<T, F> bigOne;
+public class ParallelGeneticAlgorithm<G extends Gene<?, G>, F> {
+    private List<GeneticAlgorithm<G, F>> algorithms = new ArrayList<>();
+    private GeneticAlgorithm<G, F> bigOne;
     private CyclicBarrier barrier;
     private int currentMerge;
     private int bigMergesLimit;
     private int generationsBeforeMerge;
 
-    public ParallelGeneticAlgorithm(Supplier<GeneticAlgorithm<T, F>> algorithmSupplier,
+    public ParallelGeneticAlgorithm(Supplier<GeneticAlgorithm<G, F>> algorithmSupplier,
                                     int count, int bigMergesLimit, int generationsBeforeMerge) {
         this(algorithmSupplier, algorithmSupplier.get(), count, bigMergesLimit, generationsBeforeMerge);
     }
 
-    public ParallelGeneticAlgorithm(Supplier<GeneticAlgorithm<T, F>> algorithmSupplier, GeneticAlgorithm<T, F> bigOne,
+    public ParallelGeneticAlgorithm(Supplier<GeneticAlgorithm<G, F>> algorithmSupplier, GeneticAlgorithm<G, F> bigOne,
                                     int count, int bigMergesLimit, int generationsBeforeMerge) {
         RequireUtils.positive(count);
         Objects.requireNonNull(algorithmSupplier);
@@ -38,8 +38,8 @@ public class ParallelGeneticAlgorithm<T, F> {
         this.generationsBeforeMerge = generationsBeforeMerge;
     }
 
-    public Population<T, F> runAlgorithm() {
-        ConcurrentLinkedDeque<Individual<T, F>> individuals = new ConcurrentLinkedDeque<>();
+    public Population<G, F> runAlgorithm() {
+        ConcurrentLinkedDeque<Individual<G, F>> individuals = new ConcurrentLinkedDeque<>();
         Thread[] threads = new Thread[algorithms.size()];
         for (int i = 0; i < bigMergesLimit; i++) {
             for (int j = 0; j < algorithms.size(); j++) {
@@ -68,7 +68,7 @@ public class ParallelGeneticAlgorithm<T, F> {
         return null;
     }
 
-    public GeneticAlgorithm<T, F> getBigOne() {
+    public GeneticAlgorithm<G, F> getBigOne() {
         return bigOne;
     }
 }

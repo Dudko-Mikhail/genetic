@@ -1,11 +1,16 @@
 package by.dudko.genetic.process.replacement.impl;
 
 import by.dudko.genetic.model.gene.Gene;
+import by.dudko.genetic.process.replacement.Replacement;
 import by.dudko.genetic.process.selection.Selection;
 import by.dudko.genetic.util.RequireUtils;
 
-public class PercentageReplacement<G extends Gene<?, G>, F> extends AbstractBinaryReplacement<G, F> {
+public class PercentageReplacement<G extends Gene<?, G>, F> extends BinaryReplacement<G, F> {
     private final double offspringPercentage;
+
+    public static <G extends Gene<?, G>, F> Replacement<G, F> pureOffspring(Selection<G, F> offspringSelection) {
+        return new PercentageReplacement<>(1, offspringSelection);
+    }
 
     public PercentageReplacement(double offspringPercentage,
                                  Selection<G, F> oldGenerationSelection, Selection<G, F> offspringSelection) {

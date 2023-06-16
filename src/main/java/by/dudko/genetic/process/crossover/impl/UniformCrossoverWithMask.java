@@ -2,39 +2,34 @@ package by.dudko.genetic.process.crossover.impl;
 
 import by.dudko.genetic.model.chromosome.Chromosome;
 import by.dudko.genetic.model.gene.Gene;
-import by.dudko.genetic.process.crossover.ChromosomeCrossover;
-import by.dudko.genetic.util.RandomUtils;
+import by.dudko.genetic.process.crossover.BinaryCrossover;
 import by.dudko.genetic.util.RequireUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.random.RandomGenerator;
 
-public class UniformCrossoverWithMask<G extends Gene<?, G>> implements ChromosomeCrossover<G> {
-    private final RandomGenerator random;
-    private final double exchangeProbability;
+public class UniformCrossoverWithMask<G extends Gene<?, G>, F> extends BinaryCrossover<G, F> {
     private final boolean[] mask;
 
-    public UniformCrossoverWithMask(RandomGenerator random, double exchangeProbability, boolean[] mask) {
-        this.random = Objects.requireNonNull(random);
-        this.exchangeProbability = RequireUtils.probability(exchangeProbability);
+    public UniformCrossoverWithMask(RandomGenerator random, boolean[] mask) {
+        super(random);
         this.mask = Arrays.copyOf(mask, mask.length);
     }
 
     @Override
-    public Chromosome<G> apply(Chromosome<G> first, Chromosome<G> second) {
-        int length = Math.min(first.length(), second.length());
+    public List<Chromosome<G>> performCrossover(Chromosome<G> first, Chromosome<G> second) {
+        int length = Math.min(mask.length, Math.min(first.length(), second.length()));
         RequireUtils.lessOrEqual(length, mask.length);
-        List<G> genes = new ArrayList<>();
+        List<G> firstGenes = new ArrayList<>(first.getGenes());
+        List<G> secondGenes = new ArrayList<>(second.getGenes());
         for (int i = 0; i < length; i++) {
             if (mask[i]) {
-                genes.add(RandomUtils.spin(random, exchangeProbability) ? first.getGene(i) : second.getGene(i));
-                continue;
+                firstGenes.set(i, second.getGene(i));
+                secondGenes.set(i, first.getGene(i));
             }
-            genes.add(first.getGene(i));
         }
-        return first.newInstance(genes);
+        return List.of(first.newInstance(firstGenes), second.newInstance(secondGenes));
     }
 }

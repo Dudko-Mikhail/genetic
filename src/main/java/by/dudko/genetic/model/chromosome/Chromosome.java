@@ -6,14 +6,21 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-public interface Chromosome<G extends Gene<?, G>> { // todo Можно ещё добавить фабричные методы от varArgs
+public interface Chromosome<G extends Gene<?, G>> {
     int length();
 
     G getGene(int index);
 
     List<G> getGenes();
 
-    G replaceGene(int index, G newGene);
+    default <T> List<T> getValues(Class<T> type) {
+        return getGenes().stream()
+                .map(Gene::getValue)
+                .map(type::cast)
+                .toList();
+    }
+
+    Chromosome<G> withGeneReplaced(int index, G newGene);
 
     Chromosome<G> newInstance(Collection<? extends G> genes);
 

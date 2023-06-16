@@ -2,7 +2,6 @@ package by.dudko.genetic.process.selection.impl;
 
 import by.dudko.genetic.model.Population;
 import by.dudko.genetic.model.gene.Gene;
-import by.dudko.genetic.util.RequireUtils;
 
 import java.util.Comparator;
 import java.util.Objects;

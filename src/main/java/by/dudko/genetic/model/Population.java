@@ -39,36 +39,32 @@ public class Population<G extends Gene<?, G>, F> { // todo для вычисле
                 .toList(), fitnessFunction);
     }
 
-    public void evaluatePopulation() { // todo потокобезопасность
+    public void evaluatePopulation() {
         if (isEvaluated) {
             return;
         }
         if (fitnessFunction == null) {
             throw new IllegalStateException("Cannot evaluate population without fitness function");
         }
-        individuals.forEach(individual -> {
-            if (individual.isEvaluated()) {
-                individual.evaluateAndSetFitness(fitnessFunction);
-            }
-        });
         individuals.stream()
                 .filter(Individual::nonEvaluated)
                 .forEach(individual -> individual.evaluateAndSetFitness(fitnessFunction));
         isEvaluated = true;
     }
 
-    public void evaluatePopulation(FitnessFunction<G, F> fitnessFunction) { // todo не потокобезопасно
+    public void evaluatePopulation(FitnessFunction<G, F> fitnessFunction) {
         this.fitnessFunction = Objects.requireNonNull(fitnessFunction);
         individuals.forEach(individual -> individual.evaluateAndSetFitness(fitnessFunction));
         isEvaluated = true;
     }
 
-    public Optional<Individual<G, F>> getFittest(Comparator<? super F> comparator) { // todo можно вычислять одновременно в методе evaluate!!!
+    public Optional<Individual<G, F>> getFittest(Comparator<? super F> comparator) {
+        Objects.requireNonNull(comparator);
         if (nonEvaluated()) {
             evaluatePopulation();
         }
         return individuals.stream()
-                .max(toIndividualsComparator(Objects.requireNonNull(comparator)));
+                .max(toIndividualsComparator(comparator));
     }
 
     public void sort(Comparator<? super F> fitnessComparator) {

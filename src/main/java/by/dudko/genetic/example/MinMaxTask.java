@@ -6,16 +6,12 @@ import by.dudko.genetic.model.Individual;
 import by.dudko.genetic.model.Population;
 import by.dudko.genetic.model.gene.BooleanGene;
 import by.dudko.genetic.model.gene.Gene;
-import by.dudko.genetic.process.crossover.ChromosomeBasedCrossover;
 import by.dudko.genetic.process.crossover.PopulationCrossover;
 import by.dudko.genetic.process.crossover.impl.UniformCrossover;
 import by.dudko.genetic.process.evaluation.FitnessFunction;
-import by.dudko.genetic.process.evaluation.StopFunction;
 import by.dudko.genetic.process.initialization.ChromosomeBasedInitializer;
 import by.dudko.genetic.process.initialization.GeneBasedInitializer;
 import by.dudko.genetic.process.initialization.Initializer;
-import by.dudko.genetic.process.mutation.ChromosomeBasedMutation;
-import by.dudko.genetic.process.mutation.GeneBasedMutation;
 import by.dudko.genetic.process.mutation.PopulationMutation;
 import by.dudko.genetic.process.replacement.Replacement;
 import by.dudko.genetic.process.replacement.impl.PercentageReplacement;
@@ -23,13 +19,15 @@ import by.dudko.genetic.process.selection.Selection;
 import by.dudko.genetic.process.selection.impl.EliteSelection;
 import by.dudko.genetic.process.selection.impl.TournamentSelection;
 import by.dudko.genetic.statistics.Statistics;
-import by.dudko.genetic.util.SelectorsFactory;
+import by.dudko.genetic.util.IndexSelectors;
 
 import java.util.Random;
+import java.util.function.Predicate;
 
+@SuppressWarnings("all")
 public class MinMaxTask {
-    public static void main(String[] args) { // todo implement task
-        int answer = 1000;
+    public static void main(String[] args) {
+        int answer = 5000;
         Random random = new Random();
         Initializer<BooleanGene> initializer = new ChromosomeBasedInitializer<>(
                 new GeneBasedInitializer<>(
@@ -38,12 +36,9 @@ public class MinMaxTask {
                 )
         );
 
-
-        // todo Стоп функция. Необязательно список стоп-функций: можно цепочку (andThen...)
-        StopFunction<Long> stopFunction = population -> {
+        Predicate<Population<BooleanGene, Long>> stopFunction = population -> {
             var fittest = population.getFittest(Long::compareTo);
-            return fittest
-                    .map(individual -> individual.getFitness() == answer)
+            return fittest.map(individual -> individual.getFitness() == answer)
                     .orElse(false);
         };
 
@@ -58,15 +53,10 @@ public class MinMaxTask {
                 random, Long::compare, 4
         );
 
-        PopulationCrossover<BooleanGene> crossover = new ChromosomeBasedCrossover<>(
-                random, new UniformCrossover<BooleanGene>(random)
-        ); // todo проверить наследование
+        PopulationCrossover<BooleanGene, Long> crossover = new UniformCrossover<>(random); // todo проверить наследование
 
-        PopulationMutation<BooleanGene> mutation = new ChromosomeBasedMutation<>(
-                SelectorsFactory.probabilitySelector(random, 1),
-                new GeneBasedMutation<>(SelectorsFactory.probabilitySelector(random, 1.0 / answer),
-                        GeneMutationFactory.<BooleanGene>flipBit())
-        );
+        PopulationMutation<BooleanGene, Long> mutation = PopulationMutation.fromGeneMutator(
+                IndexSelectors.probabilitySelector(random, 1.0 / answer), GeneMutationFactory.<BooleanGene>flipBit());
 
         Selection<BooleanGene, Long> replacementSelection = new EliteSelection<>(
                 random, 0.3, Long::compare
@@ -74,16 +64,21 @@ public class MinMaxTask {
 
         Replacement<BooleanGene, Long> replacement = new PercentageReplacement<>(0.5, replacementSelection);
 
-        Statistics<BooleanGene, Long> statistics = new Statistics<>(10);
-        statistics.registerMetric("sum", (population) -> population.getIndividuals().stream()
+        Statistics<BooleanGene, Long> statistics = new Statistics<>(100);
+
+        statistics.registerMetric("avg", population -> population.getIndividuals().stream()
                 .map(Individual::getFitness)
-                .reduce(Long::sum));
-        statistics.registerMetric("min", (population) -> population.getIndividuals().stream()
+                .reduce(Long::sum).get() / (double) population.getSize(), Double.class);
+
+
+        statistics.registerMetric("min", population -> population.getIndividuals().stream()
                 .map(Individual::getFitness)
-                .reduce(Math::min));
-        statistics.registerMetric("max", (population) -> population.getIndividuals().stream()
+                .reduce(Math::min).get(), Long.class);
+
+
+        statistics.registerMetric("max", population -> population.getIndividuals().stream()
                 .map(Individual::getFitness)
-                .reduce(Math::max));
+                .reduce(Math::max).get(), Long.class);
 
         var algorithmBuilder = GeneticAlgorithm.<BooleanGene, Long>builder()
                 .initializer(initializer)
@@ -98,12 +93,15 @@ public class MinMaxTask {
                 .populationCompletionActive(false)
                 .stopFunction(stopFunction)
                 .statistics(statistics)
-                .comparator(Long::compareTo);
+                .fitnessComparator(Long::compareTo);
 
         GeneticAlgorithm<BooleanGene, Long> geneticAlgorithm = algorithmBuilder.build();
-        geneticAlgorithm.runAlgorithm(1000); // todo количество запусков в параметр метода
-        statistics.getTimeStatistics().printStatistics();
-
+        geneticAlgorithm.runAlgorithm(1000);
+//        geneticAlgorithm.runAlgorithm(20);
+//        statistics.printFullStatistics();
+//        statistics.printMetricLog("avg");
+//        statistics.printFullStatistics();
+        statistics.printTimeStatistics();
 
 //        ParallelGeneticAlgorithm<Boolean, Long> parallelGA = new ParallelGeneticAlgorithm<>(
 //                () -> algorithmBuilder.build(), 8, 1, 100

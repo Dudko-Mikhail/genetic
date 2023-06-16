@@ -7,15 +7,16 @@ import by.dudko.genetic.process.selection.Selection;
 
 import java.util.Objects;
 
-public abstract class AbstractReplacement<G extends Gene<?, G>, F> implements Replacement<G, F> {
+public abstract class UnaryReplacement<G extends Gene<?, G>, F> implements Replacement<G, F> {
     private final Selection<G, F> selection;
 
-    protected AbstractReplacement(Selection<G, F> selection) {
+    protected UnaryReplacement(Selection<G, F> selection) {
         this.selection = Objects.requireNonNull(selection);
     }
 
     @Override
-    public final Population<G, F> replace(Population<G, F> oldGeneration, Population<G, F> offspring, int newPopulationSize) {
+    public final Population<G, F> replace(Population<G, F> oldGeneration, Population<G, F> offspring,
+                                          int newPopulationSize) {
         return selection.select(union(oldGeneration, offspring), newPopulationSize);
     }
 

@@ -19,8 +19,8 @@ public class MonteCarloSelection<G extends Gene<?, G>, F> implements Selection<G
     @Override
     public Population<G, F> select(Population<G, F> population, int selectedPopulationSize) {
         RequireUtils.positive(selectedPopulationSize);
-        return new Population<>(RandomUtils.randomIndexes(random, 0, population.getSize(), selectedPopulationSize)
+        return new Population<>(RandomUtils.randomNumbers(random, 0, population.getSize(), selectedPopulationSize)
                 .mapToObj(population::getIndividual)
-                .toList());
+                .toList(), population.getFitnessFunction());
     }
 }

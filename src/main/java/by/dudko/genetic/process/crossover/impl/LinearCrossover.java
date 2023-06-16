@@ -1,6 +1,7 @@
 package by.dudko.genetic.process.crossover.impl;
 
 import by.dudko.genetic.model.gene.Gene;
+import by.dudko.genetic.model.gene.NumericGene;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -79,36 +80,6 @@ class SpecialChromosome<G extends Gene<?, G>> {
     }
 }
 
-abstract class NumericGene<T extends Number,
-        G extends NumericGene<T, G>> implements Gene<T, G> {
-    public NumericGene(T value) {
-
-    }
-
-    @Override
-    public T getValue() {
-        return null;
-    }
-
-    abstract G fromNumber(Number value);
-}
-
-class IntegerGene extends NumericGene<Integer, IntegerGene> {
-    public IntegerGene(int value) {
-        super(value);
-    }
-
-    @Override
-    public IntegerGene newInstance(Integer value) {
-        return new IntegerGene(value);
-    }
-
-    @Override
-    IntegerGene fromNumber(Number value) {
-        return new IntegerGene(value.intValue());
-    }
-}
-
 class SpecialLinearCrossover<G extends NumericGene<?, G>> implements BinaryOperator<SpecialChromosome<G>> {
     @Override
     public SpecialChromosome<G> apply(SpecialChromosome<G> first, SpecialChromosome<G> second) {
@@ -123,7 +94,8 @@ class SpecialLinearCrossover<G extends NumericGene<?, G>> implements BinaryOpera
         int geneIndex = random.nextInt(length);
         G firstGene = first.getGene(geneIndex);
         G secondGene = second.getGene(geneIndex);
-        G result = firstGene.fromNumber(firstGene.getValue().doubleValue() * a + secondGene.getValue().doubleValue() * b);
+        G result = firstGene.fromNumberWithSameBounds(firstGene.getValue().doubleValue() * a
+                + secondGene.getValue().doubleValue() * b);
         List<G> genes = new ArrayList<>();
         for (int i = 0; i < length; i++) {
             if (i != geneIndex) {

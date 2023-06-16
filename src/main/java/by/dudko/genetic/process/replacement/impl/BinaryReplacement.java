@@ -9,28 +9,29 @@ import by.dudko.genetic.util.RequireUtils;
 import java.util.ArrayList;
 import java.util.Objects;
 
-public abstract class AbstractBinaryReplacement<G extends Gene<?, G>, F> implements Replacement<G, F> {
+public abstract class BinaryReplacement<G extends Gene<?, G>, F> implements Replacement<G, F> {
     private final Selection<G, F> oldGenerationSelection;
     private final Selection<G, F> offspringSelection;
 
-    protected AbstractBinaryReplacement(Selection<G, F> selection) {
+    protected BinaryReplacement(Selection<G, F> selection) {
         this(selection, selection);
     }
 
-    protected AbstractBinaryReplacement(Selection<G, F> oldGenerationSelection, Selection<G, F> offspringSelection) {
+    protected BinaryReplacement(Selection<G, F> oldGenerationSelection, Selection<G, F> offspringSelection) {
         this.oldGenerationSelection = Objects.requireNonNull(oldGenerationSelection);
         this.offspringSelection = Objects.requireNonNull(offspringSelection);
     }
 
     @Override
-    public final Population<G, F> replace(Population<G, F> oldGeneration, Population<G, F> offspring, int newPopulationSize) {
+    public final Population<G, F> replace(Population<G, F> oldGeneration, Population<G, F> offspring,
+                                          int newPopulationSize) {
         RequireUtils.positive(newPopulationSize);
-        int offSpringSize = defineOffspringSizeInNewPopulation(oldGeneration.getSize(), newPopulationSize);
+        int offSpringSize = defineOffspringSizeInNewPopulation(oldGeneration.getSize(), newPopulationSize)
+                % newPopulationSize;
         int oldGenerationSize = newPopulationSize - offSpringSize;
-        var oldGenerationIndividuals = oldGenerationSelection.select(oldGeneration, oldGenerationSize);
-        var offSpringIndividuals = offspringSelection.select(offspring, offSpringSize);
-        var newGenerationIndividuals = new ArrayList<>(oldGenerationIndividuals.getIndividuals());
-        newGenerationIndividuals.addAll(offSpringIndividuals.getIndividuals());
+        var newGenerationIndividuals = new ArrayList<>(oldGenerationSelection.select(oldGeneration, oldGenerationSize)
+                .getIndividuals());
+        newGenerationIndividuals.addAll(offspringSelection.select(offspring, offSpringSize).getIndividuals());
         return new Population<>(newGenerationIndividuals, oldGeneration.getFitnessFunction());
     }
 

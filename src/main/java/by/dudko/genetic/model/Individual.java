@@ -1,18 +1,19 @@
 package by.dudko.genetic.model;
 
 import by.dudko.genetic.model.chromosome.Chromosome;
+import by.dudko.genetic.model.chromosome.impl.BaseChromosome;
 import by.dudko.genetic.model.gene.Gene;
 import by.dudko.genetic.process.evaluation.FitnessFunction;
 
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
+import java.util.Objects;
 
-public class Individual<G extends Gene<?, G>, F> implements Chromosome<G> { // todo equals, hashcode, boolean isEvaluated?
-    private final Chromosome<G> chromosome;
+public class Individual<G extends Gene<?, G>, F> extends BaseChromosome<G> { // todo equals, hashcode
     private long birthGeneration;
     private F fitness;
 
-    public Individual(Chromosome<G> chromosome, long birthGeneration, F fitness) { // todo Разобраться с конструкторами конструкторы
+    public Individual(Chromosome<G> chromosome, long birthGeneration, F fitness) { // todo Разобраться с конструкторами
         this(chromosome, birthGeneration);
         this.fitness = fitness;
     }
@@ -28,33 +29,22 @@ public class Individual<G extends Gene<?, G>, F> implements Chromosome<G> { // t
     }
 
     public Individual(Chromosome<G> chromosome) {
-        this.chromosome = chromosome;
+        super(chromosome.getGenes());
     }
 
-    @Override
-    public int length() {
-        return chromosome.length();
-    }
-
-    @Override
-    public G getGene(int index) {
-        return chromosome.getGene(index);
-    }
-
-    @Override
-    public List<G> getGenes() {
-        return chromosome.getGenes();
-    }
-
-    @Override
-    public G replaceGene(int index, G newGene) {
-        fitness = null;
-        return chromosome.replaceGene(index, newGene);
+    public Individual(Collection<? extends G> genes) {
+        super(genes);
     }
 
     @Override
     public Individual<G, F> newInstance(Collection<? extends G> genes) {
-        return new Individual<>(chromosome.newInstance(genes), fitness);
+        return new Individual<>(genes);
+    }
+
+    @Override
+    public Individual<G, F> newInstance(G[] genes) {
+        return new Individual<>(Arrays.stream(genes)
+                .toList());
     }
 
     public Chromosome<G> box() {
@@ -63,6 +53,10 @@ public class Individual<G extends Gene<?, G>, F> implements Chromosome<G> { // t
 
     long getAge(long currentGeneration) {
         return currentGeneration - birthGeneration;
+    }
+
+    public void setBirthGeneration(long birthGeneration) {
+        this.birthGeneration = birthGeneration;
     }
 
     public F getFitness() {
@@ -74,7 +68,7 @@ public class Individual<G extends Gene<?, G>, F> implements Chromosome<G> { // t
     }
 
     public F evaluateAndSetFitness(FitnessFunction<G, ? extends F> fitnessFunction) {
-        fitness = fitnessFunction.apply(chromosome);
+        fitness = fitnessFunction.apply(this);
         return fitness;
     }
 
@@ -87,10 +81,30 @@ public class Individual<G extends Gene<?, G>, F> implements Chromosome<G> { // t
     }
 
     @Override
-    public String toString() { // todo update
-        return "Individual{" +
-                "chromosome=" + chromosome +
-                ", fitness=" + fitness +
-                '}';
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Individual<?, ?> that)) return false;
+        if (!super.equals(o)) return false;
+
+        if (birthGeneration != that.birthGeneration) return false;
+        return Objects.equals(fitness, that.fitness);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (int) (birthGeneration ^ (birthGeneration >>> 32));
+        result = 31 * result + (fitness != null ? fitness.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("Individual{");
+        sb.append("genes=").append(getGenes());
+        sb.append(", birthGeneration=").append(birthGeneration);
+        sb.append(", fitness=").append(fitness);
+        sb.append('}');
+        return sb.toString();
     }
 }

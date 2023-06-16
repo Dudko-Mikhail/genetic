@@ -3,14 +3,14 @@ package by.dudko.genetic.builder.mutation;
 import by.dudko.genetic.model.chromosome.Chromosome;
 import by.dudko.genetic.model.gene.BooleanGene;
 import by.dudko.genetic.model.gene.Gene;
-import by.dudko.genetic.process.mutation.ChromosomeBasedMutation;
 import by.dudko.genetic.process.mutation.PopulationMutation;
 import by.dudko.genetic.util.IndexSelector;
+import by.dudko.genetic.util.IndexSelectors;
 
 import java.util.function.UnaryOperator;
 import java.util.random.RandomGenerator;
 
-public class MutationBuilder<G extends Gene<?, G>> { // todo возможно данный класс, находиться внутри geneticAlgorithmBuilder
+public class MutationBuilder<G extends Gene<?, G>, F> { // todo переместить и доделать или удалить
     private double chromosomeMutationProbability = 0.1;
 
     public MutationBuilder() {
@@ -24,7 +24,7 @@ public class MutationBuilder<G extends Gene<?, G>> { // todo возможно д
         return new ChromosomeBasedMutationBuilder();
     }
 
-    public MutationBuilder<G> chromosomeMutationProbability(double chromosomeMutationProbability) {
+    public MutationBuilder<G, F> chromosomeMutationProbability(double chromosomeMutationProbability) {
         this.chromosomeMutationProbability = chromosomeMutationProbability;
         return this;
     }
@@ -33,8 +33,8 @@ public class MutationBuilder<G extends Gene<?, G>> { // todo возможно д
         private RandomGenerator random;
         private UnaryOperator<Chromosome<G>> chromosomeMutator;
 
-        public PopulationMutation<G> build() {
-            return new ChromosomeBasedMutation<>(random, chromosomeMutationProbability, chromosomeMutator);
+        public PopulationMutation<G, F> build() {
+            return PopulationMutation.fromChromosomeMutator(IndexSelectors.probabilitySelector(random, chromosomeMutationProbability), chromosomeMutator);
         }
 
         public ChromosomeBasedMutationBuilder chromosomeMutator(UnaryOperator<Chromosome<G>> chromosomeMutator) {
@@ -49,10 +49,10 @@ public class MutationBuilder<G extends Gene<?, G>> { // todo возможно д
     }
 
     public class GeneBasedMutationBuilder {
-        private IndexSelector indexSelector;
+        private IndexSelector<G> indexSelector;
         private UnaryOperator<G> geneMutator;
 
-        public PopulationMutation<G> build() { // todo implement
+        public PopulationMutation<G, F> build() { // todo implement
             return null;
         }
 
@@ -61,21 +61,9 @@ public class MutationBuilder<G extends Gene<?, G>> { // todo возможно д
             return this;
         }
 
-        public GeneBasedMutationBuilder indexSelector(IndexSelector indexSelector) {
+        public GeneBasedMutationBuilder indexSelector(IndexSelector<G> indexSelector) {
             this.indexSelector = indexSelector;
             return this;
         }
     }
 }
-
-class zeta { // todo remove
-    public static void main(String[] args) {
-        PopulationMutation<BooleanGene> populationMutation = new MutationBuilder<BooleanGene>()
-                .chromosomeMutationProbability(0.5)
-                .geneBasedMutation()
-//                .geneMutationProbability(0.7)
-                .geneMutator(GeneMutationFactory.flipBit())
-                .build();
-    }
-}
-

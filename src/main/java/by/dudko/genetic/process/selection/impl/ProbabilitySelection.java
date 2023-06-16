@@ -24,7 +24,7 @@ public abstract class ProbabilitySelection<G extends Gene<?, G>, F> implements S
         return select(population, selectedPopulationSize, partialSums);
     }
 
-    public Population<G, F> select(Population<G, F> population, int selectedPopulationSize, double[] partialSums) {
+    protected Population<G, F> select(Population<G, F> population, int selectedPopulationSize, double[] partialSums) {
         int size = population.getSize();
         var selectedIndividuals = Stream.generate(() -> population.getIndividual(spin(partialSums) % size))
                 .limit(selectedPopulationSize)
@@ -32,7 +32,7 @@ public abstract class ProbabilitySelection<G extends Gene<?, G>, F> implements S
         return new Population<>(selectedIndividuals, population.getFitnessFunction());
     }
 
-    protected double[] mapToPartialSums(double[] probabilities) { // todo change to private
+    protected double[] mapToPartialSums(double[] probabilities) {
         double sum = 0;
         for (int i = 0; i < probabilities.length; i++) {
             sum += probabilities[i];
@@ -48,7 +48,7 @@ public abstract class ProbabilitySelection<G extends Gene<?, G>, F> implements S
         return find(partialSums, value, 0);
     }
 
-    protected int find(double[] partialSums, double value, int start) {
+    int find(double[] partialSums, double value, int start) {
         return partialSums.length < BINARY_SEARCH_THRESHOLD ? linearSearch(partialSums, value, start)
                 : binarySearch(partialSums, value, start);
     }

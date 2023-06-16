@@ -10,10 +10,6 @@ public interface Metric<G extends Gene<?, G>, F, T> extends Function<Population<
         return Object::toString;
     }
 
-    default Function<Population<G, F>, String> mapToString() {
-        return andThen(value -> formatter().apply(value));
-    }
-
     default String stringify(Population<G, F> population) {
         return formatter().apply(apply(population));
     }

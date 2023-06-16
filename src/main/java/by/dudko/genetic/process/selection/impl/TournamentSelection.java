@@ -36,7 +36,7 @@ public class TournamentSelection<G extends Gene<?, G>, F> implements Selection<G
     }
 
     private Individual<G, F> hostTournament(Population<G, F> population) {
-        return RandomUtils.uniqueRandomIndexes(random, 0, population.getSize(), roundSize)
+        return RandomUtils.uniqueRandomNumbers(random, 0, population.getSize(), roundSize)
                 .mapToObj(population::getIndividual)
                 .reduce(this::determineWinner)
                 .orElseThrow();

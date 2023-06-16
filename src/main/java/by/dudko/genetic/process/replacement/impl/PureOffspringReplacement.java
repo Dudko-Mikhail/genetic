@@ -4,8 +4,8 @@ import by.dudko.genetic.model.Population;
 import by.dudko.genetic.model.gene.Gene;
 import by.dudko.genetic.process.selection.Selection;
 
-public class PureOffspring<G extends Gene<?, G>, F> extends AbstractReplacement<G, F> {
-    public PureOffspring(Selection<G, F> selection) {
+public class PureOffspringReplacement<G extends Gene<?, G>, F> extends UnaryReplacement<G, F> {
+    public PureOffspringReplacement(Selection<G, F> selection) {
         super(selection);
     }
 

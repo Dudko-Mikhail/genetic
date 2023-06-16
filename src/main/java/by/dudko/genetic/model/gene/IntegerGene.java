@@ -11,7 +11,18 @@ public class IntegerGene extends NumericGene<Integer, IntegerGene> {
 
     @Override
     public IntegerGene newInstance(Integer value) {
+        return new IntegerGene(value, min, max);
+    }
+
+    @Override
+    public IntegerGene newInstanceWithDefaultBounds(Integer value) {
+        System.out.println(newInstanceWithDefaultBounds(9));
         return new IntegerGene(value);
+    }
+
+    @Override
+    public IntegerGene fromNumberWithSameBounds(Number value) {
+        return newInstance(value.intValue());
     }
 
     @Override

@@ -40,9 +40,35 @@ public abstract class NumericGene<T extends Number, G extends NumericGene<T, G>>
         return LimitedGene.isInBounds(value, min, max, comparator);
     }
 
+    public abstract G fromNumberWithSameBounds(Number value);
+
     @Override
     public int compareTo(G other) {
         return comparator.compare(value, other.value);
+    }
+
+    public int intValue() {
+        return value.intValue();
+    }
+
+    public long longValue() {
+        return value.longValue();
+    }
+
+    public float floatValue() {
+        return value.floatValue();
+    }
+
+    public double doubleValue() {
+        return value.doubleValue();
+    }
+
+    public byte byteValue() {
+        return value.byteValue();
+    }
+
+    public short shortValue() {
+        return value.shortValue();
     }
 
     @Override

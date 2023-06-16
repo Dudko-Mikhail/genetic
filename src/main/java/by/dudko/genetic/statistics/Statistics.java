@@ -8,111 +8,114 @@ import java.util.*;
 import java.util.function.Consumer;
 
 public class Statistics<G extends Gene<?, G>, F> implements IStatistics<G, F> {
-    private final TimeStatistics timeStatistics = new TimeStatistics();
     private final int logPeriod;
+    private final TimeStatistics timeStatistics = new TimeStatistics();
     private final Map<String, Metric<G, F, ?>> metrics = new HashMap<>();
-    private final Map<String, List<Object>> metricLog = new HashMap<>();
-    private final Map<Long, StatisticsLog<G, F>> generationLog = new HashMap<>();
-    private final Consumer<StatisticsLog<G, F>> printAction;
+    private final Map<Long, GenerationStatistics<G, F>> generationsLog = new LinkedHashMap<>();
+    private final Map<String, MetricLog<G, F, ?>> metricsLog = new LinkedHashMap<>();
+    private final Consumer<GenerationStatistics<G, F>> printAction;
 
-    public Statistics(int logPeriod) { // todo вместо этого парочку статических методов
-        this(logPeriod, (StatisticsLog::printStatistics));
+    public static <G extends Gene<?, G>, F> Statistics<G, F> statisticsWithoutConsoleLog(int logPeriod) {
+        return new Statistics<>(logPeriod, (log) -> {
+        });
     }
 
-    public Statistics(int logPeriod, Consumer<StatisticsLog<G, F>> printAction) {
+    public Statistics(int logPeriod) {
+        this(logPeriod, GenerationStatistics::printStatistics);
+    }
+
+    public Statistics(int logPeriod, Consumer<GenerationStatistics<G, F>> printAction) {
         this.logPeriod = RequireUtils.positive(logPeriod);
         this.printAction = Objects.requireNonNull(printAction);
     }
 
-    public Statistics<G, F> registerMetric(String name, Metric<G, F, ?> metric) {
+    @Override
+    public <T> void registerMetric(String name, Metric<G, F, T> metric, Class<T> loggedType) {
         metrics.put(name, metric);
-        return this;
+        metricsLog.put(name, new MetricLog<>(name, metric, loggedType));
     }
 
+    @Override
     public Metric<G, F, ?> getMetric(String name) {
         return metrics.get(name);
     }
 
+    @Override
     public void calculateStatistics(Population<G, F> population, long generationNumber) {
         if (generationNumber % logPeriod == 0) {
             metrics.forEach((name, metric) -> {
-                List<Object> metricLog = this.metricLog.getOrDefault(name, new ArrayList<>());
-                metricLog.add(metric.apply(population));
+                var metricLog = metricsLog.get(name);
+                metricLog.logGeneration(generationNumber, population);
             });
-            StatisticsLog<G, F> log = new StatisticsLog<>(generationNumber, population, metrics);
-            generationLog.put(generationNumber, log);
+            GenerationStatistics<G, F> log = new GenerationStatistics<>(generationNumber, population, metrics);
+            generationsLog.put(generationNumber, log);
             printAction.accept(log);
         }
     }
 
-    public <T> Optional<T> select(long generationNumber, String metric, Class<T> loggedType) { // todo refactor
-        if (generationNumber % logPeriod != 0) {
-            return Optional.empty();
-        }
-        int index = (int) (generationNumber / logPeriod);
-        List<Object> objects = metricLog.get(metric);
-        return Optional.of(objects.get(index))
-                .map(loggedType::cast);
-    }
-
-    public <T> List<T> select(String metric, Class<T> loggedType) {
-        List<?> results = metricLog.get(metric);
-        if (results == null) {
-            return new ArrayList<>();
-        }
-        return results.stream()
-                .map(loggedType::cast)
-                .toList();
-    }
-
-    public Map<Long, StatisticsLog<G, F>> getGenerationLog() {
-        return generationLog;
+    @Override
+    public Map<Long, GenerationStatistics<G, F>> getGenerationsStatistics() {
+        return Collections.unmodifiableMap(generationsLog);
     }
 
     public TimeStatistics getTimeStatistics() {
         return timeStatistics;
     }
 
-
-
-
     @Override
-    public <T> List<T> fullMetricLog(String metric, Class<T> loggedType) {
-        return null;
+    public <T> Optional<MetricLog<G, F, T>> fullMetricLog(String metric, Class<T> loggedType) {
+        var metricLog = metricsLog.get(metric);
+        if (metricLog == null) {
+            Optional.empty();
+        }
+        if (!metricLog.isLoggedTypeValid(loggedType)) {
+            throw new IllegalArgumentException("Given logged type [%s] is not assignable from [%s]"
+                    .formatted(loggedType, metricLog.getLoggedType()));
+        }
+        return Optional.of((MetricLog<G, F, T>) metricLog);
     }
 
     @Override
-    public <T> Optional<T> getLog(String metric, long generationNumber, Class<T> loggedType) {
-        return Optional.empty();
+    public <T> Optional<T> getMetricLogByGeneration(String metric, long generationNumber, Class<T> loggedType) {
+        return Optional.ofNullable(metricsLog.get(metric))
+                .map(metricLog -> {
+                    if (!metricLog.isLoggedTypeValid(loggedType)) {
+                        return null;
+                    }
+                    return loggedType.cast(metricLog.getLogByGeneration(generationNumber));
+                });
     }
 
     @Override
-    public <T> List<T> generationLog(long generationNumber, Class<T> loggedType) {
-        return null;
-    }
-
-    @Override
-    public void registerMetric(Metric<G, F, ?> metric) {
-
-    }
-
-    @Override
-    public void printMetricLog(String metric) {
-
+    public Optional<GenerationStatistics<G, F>> getGenerationStatistics(long generationNumber) {
+        return Optional.ofNullable(generationsLog.get(generationNumber));
     }
 
     @Override
     public void printMetricLogByGeneration(String metric, long generationNumber) {
-        var formatter = metrics.get(metric).formatter();
+        Optional.ofNullable(metricsLog.get(metric))
+                .ifPresent(metricLog -> metricLog.printLogByGeneration(generationNumber));
     }
 
     @Override
-    public void printGenerationLog(long generationNumber) {
-        generationLog.get(generationNumber).printStatistics();
+    public void printGenerationStatistics(long generationNumber) {
+        generationsLog.get(generationNumber).printStatistics();
+    }
+
+    public void printTimeStatistics() {
+        timeStatistics.printStatistics();
     }
 
     @Override
     public void printFullStatistics() {
+        timeStatistics.printStatistics();
+        generationsLog.values()
+                .forEach(GenerationStatistics::printStatistics);
+    }
 
+    @Override
+    public void printMetricLog(String metric) {
+        Optional.ofNullable(metricsLog.get(metric))
+                .ifPresent(MetricLog::printLog);
     }
 }

@@ -24,7 +24,7 @@ public class StochasticUniversalSamplingDecorator<G extends Gene<?, G>, F> exten
     }
 
     @Override
-    public Population<G, F> select(Population<G, F> population, int selectedPopulationSize, double[] partialSums) {
+    protected Population<G, F> select(Population<G, F> population, int selectedPopulationSize, double[] partialSums) {
         List<Individual<G, F>> individuals = new ArrayList<>(selectedPopulationSize);
         while (individuals.size() < selectedPopulationSize) {
             double pointerPosition = random.nextDouble(distance);
@@ -32,7 +32,6 @@ public class StochasticUniversalSamplingDecorator<G extends Gene<?, G>, F> exten
                 j = find(partialSums, pointerPosition, j);
                 pointerPosition += distance;
                 individuals.add(population.getIndividual(j));
-                System.out.println(i);
                 if (individuals.size() == selectedPopulationSize) {
                     break;
                 }
@@ -46,33 +45,3 @@ public class StochasticUniversalSamplingDecorator<G extends Gene<?, G>, F> exten
         return this.selection.calculateProbabilities(population);
     }
 }
-
-//public class StochasticUniversalSampling<G extends Gene<?, G>, F> extends RouletteWheelSelection<G, F> { // todo remove or restore
-//    private final int pointers;
-//    private final double distance;
-//
-//    public StochasticUniversalSampling(RandomGenerator random, Function<F, Double> mapper, int pointers) {
-//        super(random, mapper);
-//        this.pointers = RequireUtils.positive(pointers);
-//        distance = 1.0 / pointers;
-//    }
-//
-//    @Override
-//    public Population<G, F> select(Population<G, F> population, int selectedPopulationSize, double[] partialSums) {
-//        List<Individual<G, F>> individuals = new ArrayList<>(selectedPopulationSize);
-//        while (individuals.size() < selectedPopulationSize) {
-//            double pointerPosition = random.nextDouble(distance);
-//            for (int i = 0, j = 0; i < pointers; i++) {
-//                j = find(partialSums, pointerPosition, j);
-//                pointerPosition += distance;
-//                individuals.add(population.getIndividual(j));
-//                System.out.println(i);
-//                if (individuals.size() == selectedPopulationSize) {
-//                    break;
-//                }
-//            }
-//        }
-//        return new Population<>(individuals, population.getFitnessFunction());
-//    }
-//}
-

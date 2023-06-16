@@ -9,7 +9,7 @@ import java.util.function.BinaryOperator;
 import java.util.random.RandomGenerator;
 import java.util.stream.Stream;
 
-public class GeneBasedCrossover<G extends Gene<?, G>> implements BinaryOperator<Chromosome<G>> {
+public class GeneBasedCrossover<G extends Gene<?, G>> implements BinaryOperator<Chromosome<G>> { // todo refactor
     private final RandomGenerator random;
     private final BinaryOperator<G> geneCrossover;
 

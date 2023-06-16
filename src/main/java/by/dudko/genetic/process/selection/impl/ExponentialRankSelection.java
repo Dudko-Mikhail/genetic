@@ -31,7 +31,7 @@ public class ExponentialRankSelection<G extends Gene<?, G>, F> extends Probabili
     }
 
     @Override
-    public double[] calculateProbabilities(Population<G, F> population) {
+    protected double[] calculateProbabilities(Population<G, F> population) {
         int n = population.getSize();
         double[] probabilities = new double[n];
         population.sort(comparator);

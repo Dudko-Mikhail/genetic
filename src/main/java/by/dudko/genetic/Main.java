@@ -1,28 +1,30 @@
 package by.dudko.genetic;
 
-import by.dudko.genetic.util.SelectorsFactory;
-
+import java.time.Clock;
 import java.util.LongSummaryStatistics;
 import java.util.Random;
 
 public class Main {
+    private static final Clock clock = Clock.systemUTC();
     private static final Random random = new Random();
 
     public static void main(String[] args) throws Exception {
-        var selector = SelectorsFactory.selectorWithVaryingSelectionLength(new Random(), 1, 10);
-        var binary = SelectorsFactory.toBinarySelector(selector);
-        System.out.println(selector.selectIndexes(20).boxed().toList());
-        System.out.println(selector.selectIndexes(9).boxed().toList());
-        System.out.println(selector.selectIndexes(9).boxed().toList());
+
+
+//        var selector = SelectorsFactory.selectorWithVaryingSelectionLength(new Random(), 1, 10);
+//        var binary = SelectorsFactory.toBinarySelector(selector);
+//        System.out.println(selector.selectIndexes(20).boxed().toList());
+//        System.out.println(selector.selectIndexes(9).boxed().toList());
+//        System.out.println(selector.selectIndexes(9).boxed().toList());
 
     }
 
     public static LongSummaryStatistics measurePerformance(int repeatCount, Command command) {
         LongSummaryStatistics statistics = new LongSummaryStatistics();
         for (int i = 0; i < repeatCount; i++) {
-            long start = System.currentTimeMillis();
+            long start = clock.millis();
             command.execute();
-            long end = System.currentTimeMillis();
+            long end = clock.millis();
             statistics.accept(end - start);
         }
         return statistics;

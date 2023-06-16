@@ -11,6 +11,16 @@ public class DoubleGene extends NumericGene<Double, DoubleGene> {
 
     @Override
     public DoubleGene newInstance(Double value) {
+        return new DoubleGene(value, min, max);
+    }
+
+    @Override
+    public DoubleGene fromNumberWithSameBounds(Number value) {
+        return newInstance(value.doubleValue());
+    }
+
+    @Override
+    public DoubleGene newInstanceWithDefaultBounds(Double value) {
         return new DoubleGene(value);
     }
 
